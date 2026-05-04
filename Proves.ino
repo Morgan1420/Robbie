@@ -1,22 +1,4 @@
 
-// // Coses del servo
-// #include <Servo.h>
-// #define servoPin 3
-// #define servoGrauInici 30
-// #define servoGrauFi 150
-// #define servoDelayGirs 10
-// Servo miServo;
-// void servoGir() {
-//   for (int pos = servoGrauInici; pos <= servoGrauFi; pos += 1) {
-//     miServo.write(pos);              // Indica al servo que vaya a la posición 'pos'
-//     delay(servoDelayGirs);                       // Espera 15ms para que el servo llegue
-//   }
-//   for (int pos = servoGrauFi; pos >= servoGrauInici; pos -= 1) {
-//     miServo.write(pos);              // Indica al servo que vaya a la posición 'pos'
-//     delay(servoDelayGirs);                       // Espera 15ms para que el servo llegue
-//   }
-// }
-
 enum estats {
   INICI,
   VOLTETA_MAGICA_ESQUERRA,
@@ -33,7 +15,7 @@ enum dreta_esquerra {
   ESQUERRA
 } vist_per_ultima_vegada;
 
-
+// Velocitats
 #define velocitatEmbestidaEndevant 250
 #define velocitatEmbestidaEscombrada 128
 #define velocitatNoEmbestidaEndevant 200
@@ -41,7 +23,8 @@ enum dreta_esquerra {
 #define velocitatGirLent 128
 
 
-
+// Boto
+#define botoPin 13
 
 // Coses del ultrason
 #define ultrasonsTriggerPin A5
@@ -231,138 +214,143 @@ void setup() {
   pinMode(motorEsqIn3Pin, OUTPUT);
   pinMode(motorEsqIn4Pin, OUTPUT);
 
+  pinMode(botoPin, INPUT);
+
   estat = INICI;
   vist_per_ultima_vegada = DRETA;
 }
 
 // Loop principal
 void loop() {
-  switch(estat){
+  if (digitalRead(sensorColorsEsqPin) == 0){
+    switch(estat){
 
-    // Fa la rutina del inici
-    case INICI:
-      inici();
-      estat = VOLTETA_MAGICA;
-      break;
-
-
-
-    case VOLTETA_MAGICA_ESQUERRA:
-      if (voltetaMagicaLeft()){
-        estat = EMBESTIDA_ENDEVANT;
-        vist_per_ultima_vegada = DRETA;
-      }
-      else
-        estat = VOLTETA_MAGICA_ENDEVANT;
-      break;
+      // Fa la rutina del inici
+      case INICI:
+        inici();
+        estat = VOLTETA_MAGICA;
+        break;
 
 
 
-    case VOLTETA_MAGICA_ENDEVANT:
-      endevant();
-      estat = VOLTETA_MAGICA_ESQUERRA;
-      long temps_inici = milli();
-      while(milli() - temps_inici < 1000){
-        if (detectaBlanc()){
-          estat = TOCA_LINIA;
-          parar();
-          break;
-        }
-        if (ultrasons() < 50.0){
+      case VOLTETA_MAGICA_ESQUERRA:
+        if (voltetaMagicaLeft()){
           estat = EMBESTIDA_ENDEVANT;
-          break;
+          vist_per_ultima_vegada = DRETA;
         }
-        delay(10);
-      }
-      break;
-
-
-
-
-    case EMBESTIDA_ENDEVANT:
-      endevant();
-      while(true){
-        float distancia = ultrasons();
-        if (distancia > 50.0 && distancia < 90.0){
-          estat = EMBESTIDA_ESCOMBRADA;
-          break;
-        }
-        if (detectaBlanc()){
-          estat = TOCANT_LINIA;
-          parar();
-          break;
-        }
-      }
-      break;
-    
-
-
-
-    
-    case EMBESTIDA_ESCOMBRADA:
-      if (vist_per_ultima_vegada = DRETA)
-        escombradaDreta();
-      else
-        escombradaEsquerra();
-
-      long temps_inici = millis();
-      while(millis() - temps_inici < 250){
-        if (ultrasons() < 50){
-          estat = EMBESTIDA_ENDEVANT;
-          break;
-        }
-        if (detectaBlanc()){
-          estat = TOCANT_LINIA;
-          parar();
-          break;
-        }
-      }
-
-      if (estat == EMBESTIDA_ESCOMBRADA){
-        if (vist_per_ultima_vegada = DRETA){
-          vist_per_ultima_vegada = ESQUERRA;
-          giraDreta180();
-        }
-        else{
-          vist_per_ulima_vegada = DRETA;
-          giraEsquerra180();
-        }
-        if (ultrasons() < 50.0)
-          estat = EMBESTIDA_ENDEVANT;
         else
           estat = VOLTETA_MAGICA_ENDEVANT;
-      }
-      break;
+        break;
+
+
+
+      case VOLTETA_MAGICA_ENDEVANT:
+        endevant();
+        estat = VOLTETA_MAGICA_ESQUERRA;
+        long temps_inici = milli();
+        while(milli() - temps_inici < 1000){
+          if (detectaBlanc()){
+            estat = TOCA_LINIA;
+            parar();
+            break;
+          }
+          if (ultrasons() < 50.0){
+            estat = EMBESTIDA_ENDEVANT;
+            break;
+          }
+          delay(10);
+        }
+        break;
 
 
 
 
-    case TOCA_LINIA:
-      int deteccio = sensorColors();
-      bool esquerre = deteccio/100 == 1;
-      bool mig = (deteccio/10)%10 == 1;
-      bool dret = deteccio%10 == 1;
-      if (!esquerre && dret){
-        giraEsquerra45();
-        escombradaEsquerra();
-        delay(1000);
-        parar();
-        estat = VOLTETA_MAGICA_ENDEVANT;
-      }
-      else if (esquerra && !dret){
-        giraDreta45();
-        escombradaDreta();
-        delay(1000);
-        parar();
-        estat = VOLTETA_MAGICA_ENDEVANT;
-      }
-      else {
-        enrreraUnaMica();
-        giraEsquerra45();
-        escombradaEsquerra();
-        delay(1000);
-        parar();
-        estat = VOLTETA_MAGICA_ENDEVANT;
-      }
+      case EMBESTIDA_ENDEVANT:
+        endevant();
+        while(true){
+          float distancia = ultrasons();
+          if (distancia > 50.0 && distancia < 90.0){
+            estat = EMBESTIDA_ESCOMBRADA;
+            break;
+          }
+          if (detectaBlanc()){
+            estat = TOCANT_LINIA;
+            parar();
+            break;
+          }
+        }
+        break;
+      
+
+
+
+      
+      case EMBESTIDA_ESCOMBRADA:
+        if (vist_per_ultima_vegada = DRETA)
+          escombradaDreta();
+        else
+          escombradaEsquerra();
+
+        long temps_inici = millis();
+        while(millis() - temps_inici < 250){
+          if (ultrasons() < 50){
+            estat = EMBESTIDA_ENDEVANT;
+            break;
+          }
+          if (detectaBlanc()){
+            estat = TOCANT_LINIA;
+            parar();
+            break;
+          }
+        }
+
+        if (estat == EMBESTIDA_ESCOMBRADA){
+          if (vist_per_ultima_vegada = DRETA){
+            vist_per_ultima_vegada = ESQUERRA;
+            giraDreta180();
+          }
+          else{
+            vist_per_ulima_vegada = DRETA;
+            giraEsquerra180();
+          }
+          if (ultrasons() < 50.0)
+            estat = EMBESTIDA_ENDEVANT;
+          else
+            estat = VOLTETA_MAGICA_ENDEVANT;
+        }
+        break;
+
+
+
+
+      case TOCA_LINIA:
+        int deteccio = sensorColors();
+        bool esquerre = deteccio/100 == 1;
+        bool mig = (deteccio/10)%10 == 1;
+        bool dret = deteccio%10 == 1;
+        if (!esquerre && dret){
+          giraEsquerra45();
+          escombradaEsquerra();
+          delay(1000);
+          parar();
+          estat = VOLTETA_MAGICA_ENDEVANT;
+        }
+        else if (esquerra && !dret){
+          giraDreta45();
+          escombradaDreta();
+          delay(1000);
+          parar();
+          estat = VOLTETA_MAGICA_ENDEVANT;
+        }
+        else {
+          enrreraUnaMica();
+          giraEsquerra45();
+          escombradaEsquerra();
+          delay(1000);
+          parar();
+          estat = VOLTETA_MAGICA_ENDEVANT;
+        }
+        break;
+    }
   }
 }
