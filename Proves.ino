@@ -33,6 +33,16 @@ enum dreta_esquerra {
   ESQUERRA
 } vist_per_ultima_vegada;
 
+
+#define velocitatEmbestidaEndevant 250
+#define velocitatEmbestidaEscombrada 128
+#define velocitatNoEmbestidaEndevant 200
+#define velocitatGirRapid 200
+#define velocitatGirLent 128
+
+
+
+
 // Coses del ultrason
 #define ultrasonsTriggerPin A5
 #define ultrasonsEchoPin A4
@@ -82,22 +92,6 @@ int sensorColors(){
 #define motorEsqVelocitatPin 5
 #define motorEsqIn3Pin 7
 #define motorEsqIn4Pin 8
-void provaEndevantA(){
-  digitalWrite(motorDreIn1Pin, HIGH);
-  digitalWrite(motorDreIn2Pin, LOW);
-  analogWrite(motorDreVelocitatPin, 100);
-  digitalWrite(motorEsqIn3Pin, HIGH);
-  digitalWrite(motorEsqIn4Pin, LOW);
-  analogWrite(motorEsqVelocitatPin, 100);
-  delay(1000);
-  digitalWrite(motorDreIn1Pin, LOW);
-  digitalWrite(motorDreIn2Pin, HIGH);
-  analogWrite(motorDreVelocitatPin, 100);
-  digitalWrite(motorEsqIn3Pin, LOW);
-  digitalWrite(motorEsqIn4Pin, HIGH);
-  analogWrite(motorEsqVelocitatPin, 100);
-  delay(1000);
-}
 
 void parar(){
   digitalWrite(motorDreIn1Pin, LOW);
@@ -113,32 +107,76 @@ bool detectaBlanc(){
 void giraDreta45(){
   digitalWrite(motorDreIn1Pin, LOW);
   digitalWrite(motorDreIn2Pin, HIGH);
-  analogWrite(motorDreVelocitatPin, 200);
+  analogWrite(motorDreVelocitatPin, velocitatGirRapid);
   digitalWrite(motorEsqIn3Pin, HIGH);
   digitalWrite(motorEsqIn4Pin, LOW);
-  analogWrite(motorEsqVelocitatPin, 200);
+  analogWrite(motorEsqVelocitatPin, velocitatGirRapid);
   delay(200);
   parar();
 }
 void giraEsquerra45(){
   digitalWrite(motorDreIn1Pin, HIGH);
   digitalWrite(motorDreIn2Pin, LOW);
-  analogWrite(motorDreVelocitatPin, 200);
+  analogWrite(motorDreVelocitatPin, velocitatGirRapid);
   digitalWrite(motorEsqIn3Pin, LOW);
   digitalWrite(motorEsqIn4Pin, HIGH);
-  analogWrite(motorEsqVelocitatPin, 200);
+  analogWrite(motorEsqVelocitatPin, velocitatGirRapid);
   delay(200);
   parar();
 }
 void endevantFinsBlanc(){
   digitalWrite(motorDreIn1Pin, LOW);
   digitalWrite(motorDreIn2Pin, HIGH);
-  analogWrite(motorDreVelocitatPin, 200);
+  analogWrite(motorDreVelocitatPin, velocitatNoEmbestidaEndevant);
   digitalWrite(motorEsqIn3Pin, LOW);
   digitalWrite(motorEsqIn4Pin, HIGH);
-  analogWrite(motorEsqVelocitatPin, 200);
+  analogWrite(motorEsqVelocitatPin, velocitatNoEmbestidaEndevant);
   while (!detectaBlanc())
     delay(100);
+  parar();
+}
+void endevant() {
+  digitalWrite(motorDreIn1Pin, LOW);
+  digitalWrite(motorDreIn2Pin, HIGH);
+  analogWrite(motorDreVelocitatPin, velocitatEmbestidaEndevant);
+  digitalWrite(motorEsqIn3Pin, LOW);
+  digitalWrite(motorEsqIn4Pin, HIGH);
+  analogWrite(motorEsqVelocitatPin, velocitatEmbestidaEndevant);
+}
+void escombradaDreta() {
+  digitalWrite(motorDreIn1Pin, LOW);
+  digitalWrite(motorDreIn2Pin, HIGH);
+  analogWrite(motorDreVelocitatPin, velocitatEmbestidaEscombrada);
+  digitalWrite(motorEsqIn3Pin, LOW);
+  digitalWrite(motorEsqIn4Pin, HIGH);
+  analogWrite(motorEsqVelocitatPin, velocitatEmbestidaEndevant);
+}
+void escombradaEsquerra() {
+  digitalWrite(motorDreIn1Pin, LOW);
+  digitalWrite(motorDreIn2Pin, HIGH);
+  analogWrite(motorDreVelocitatPin, velocitatEmbestidaEscombrada);
+  digitalWrite(motorEsqIn3Pin, LOW);
+  digitalWrite(motorEsqIn4Pin, HIGH);
+  analogWrite(motorEsqVelocitatPin, velocitatEmbestidaEndevant);
+}
+void giraDreta180() {
+  digitalWrite(motorDreIn1Pin, LOW);
+  digitalWrite(motorDreIn2Pin, HIGH);
+  analogWrite(motorDreVelocitatPin, velocitatGirRapid);
+  digitalWrite(motorEsqIn3Pin, HIGH);
+  digitalWrite(motorEsqIn4Pin, LOW);
+  analogWrite(motorEsqVelocitatPin, velocitatGirRapid);
+  delay(800);
+  parar();
+}
+void giraEsquerra180() {
+  digitalWrite(motorDreIn1Pin, HIGH);
+  digitalWrite(motorDreIn2Pin, LOW);
+  analogWrite(motorDreVelocitatPin, velocitatGirRapid);
+  digitalWrite(motorEsqIn3Pin, LOW);
+  digitalWrite(motorEsqIn4Pin, HIGH);
+  analogWrite(motorEsqVelocitatPin, velocitatGirRapid);
+  delay(800);
   parar();
 }
 
@@ -146,7 +184,6 @@ void endevantFinsBlanc(){
 
 void inici() {
   giraDreta45();
-  delay(2000);
   endevantFinsBlanc();
   giraEsquerra45();
   endevantFinsBlanc();
@@ -155,10 +192,10 @@ void inici() {
 void giraEsquerra(){
   digitalWrite(motorDreIn1Pin, HIGH);
   digitalWrite(motorDreIn2Pin, LOW);
-  analogWrite(motorDreVelocitatPin, 200);
+  analogWrite(motorDreVelocitatPin, velocitatGirLent);
   digitalWrite(motorEsqIn3Pin, LOW);
-  digitalWrite(motorEsqIn4Pin, HIGH);
-  analogWrite(motorEsqVelocitatPin, 200);
+  digitalWrite(motorEsqIn4Pin, LOW);
+  analogWrite(motorEsqVelocitatPin, 0);
 }
 
 bool voltetaMagicaLeft(){
@@ -209,7 +246,7 @@ void loop() {
       break;
 
 
-    // 
+
     case VOLTETA_MAGICA_ESQUERRA:
       if (voltetaMagicaLeft()){
         estat = EMBESTIDA_ENDEVANT;
@@ -307,14 +344,14 @@ void loop() {
       bool dret = deteccio%10 == 1;
       if (!esquerre && dret){
         giraEsquerra45();
-        escombradaEsquerra(); /////////////////////////////
+        escombradaEsquerra();
         delay(1000);
         parar();
         estat = VOLTETA_MAGICA_ENDEVANT;
       }
       else if (esquerra && !dret){
         giraDreta45();
-        escombradaDreta(); ////////////////////////////////
+        escombradaDreta();
         delay(1000);
         parar();
         estat = VOLTETA_MAGICA_ENDEVANT;
@@ -322,7 +359,7 @@ void loop() {
       else {
         enrreraUnaMica();
         giraEsquerra45();
-        escombradaEsquerra(); /////////////////////////////
+        escombradaEsquerra();
         delay(1000);
         parar();
         estat = VOLTETA_MAGICA_ENDEVANT;
